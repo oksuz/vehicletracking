@@ -1,0 +1,14 @@
+{
+  "name": "mototakip-common",
+  "version": "1.0.0",
+  "description": "shared configuration",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Yunus Oksuz",
+  "license": "MIT",
+  "dependencies": {
+    "amqplib": "^0.5.5"
+  }
+}
