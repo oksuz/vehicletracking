@@ -1,4 +1,4 @@
-import { Exchange } from "./amqp/Types";
+import { Exchange } from "./Types";
 
 export const RawMessageExchange: Exchange = {
   name: 'rawMessages',

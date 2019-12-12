@@ -1,6 +1,4 @@
-import AmqpClient, { IAmqpClient } from "./amqp/AmqpClient";
-import { RawMessageExchange } from './Exchanges';
-import { RawMessageQueue } from "./Queues";
+import { AmqpClient, IAmqpClient, RawMessageExchange, RawMessageQueue } from "mototakip-common";
 import { Protocol } from "./Types";
 import * as path from 'path'
 

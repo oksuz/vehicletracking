@@ -1,14 +1,22 @@
 {
   "name": "mototakip-common",
   "version": "1.0.0",
-  "description": "shared configuration",
-  "main": "src/index.js",
+  "description": "",
+  "main": "dist/index.js",
   "scripts": {
+    "build:tsc": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Yunus Oksuz",
-  "license": "MIT",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "amqplib": "^0.5.5"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.5.13",
+    "@types/node": "^12.12.17",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.3"
   }
 }

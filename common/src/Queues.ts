@@ -1,4 +1,4 @@
-import { Queue } from "./amqp/Types";
+import { Queue } from "./Types";
 import { RawMessageExchange } from "./Exchanges";
 
 export const RawMessageQueue: Queue = {

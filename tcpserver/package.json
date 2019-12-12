@@ -19,6 +19,7 @@
     "typescript": "^3.7.3"
   },
   "dependencies": {
-    "amqplib": "^0.5.5"
+    "amqplib": "^0.5.5",
+    "mototakip-common": "file:../common"
   }
 }
