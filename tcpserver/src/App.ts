@@ -12,13 +12,25 @@ class App {
     private readonly protocols: Protocol[], 
     private readonly amqpClient: IAmqpClient
   ) {
-    
+
+    const closeHandler = () => {
+      this.amqpClient.close();
+      this.closeServers();
+    }
+
+    process.on('SIGINT', closeHandler);
+  }
+
+  closeServers() {
+    Object.keys(this.servers).forEach(protocolName => {
+      this.servers[protocolName].close();
+    });
   }
 
   async start(): Promise<void> {
     await this.amqpClient.createExchange(RawMessageExchange);
     await this.amqpClient.createQueue(RawMessageQueue);
-    await this.createServers();
+    this.createServers();
     this.startServers()
   }
 
@@ -36,9 +48,8 @@ class App {
 
   }
 
-  async createServers(): Promise<void> {
-    console.log(this.protocols);
-    await this.protocols.forEach(async protocol => {
+  createServers(): void {
+    this.protocols.forEach(async protocol => {
       this.servers[protocol.name] = new this.ServerClass(protocol.name, "0.0.0.0", protocol.port, this.onMessage.bind(this))
     })
   }

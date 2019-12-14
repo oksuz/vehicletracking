@@ -7,6 +7,7 @@ export interface IAmqpClient {
   createExchange(exchange: Exchange): Promise<void>
   createQueue(queue: Queue): Promise<void>
   bindQueueToExchange(queue: Queue): Promise<void>
+  close(): void;
 }
 
 class AmqpClient implements IAmqpClient {
@@ -68,6 +69,12 @@ class AmqpClient implements IAmqpClient {
       this.safeCloseChannel(channel);
     }
   
+  }
+
+  close(): void {
+    if (this.connection != null) {
+      this.connection.close();
+    }
   }
 
   private safeCloseChannel(channel: Channel): void {

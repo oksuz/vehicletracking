@@ -3,13 +3,17 @@ import { MessageHandler, Clients, Client } from './Types'
 
 class Server {
 
-  private server: net.Server;
-  private readonly clients: Clients
+  private server?: net.Server;
+  private readonly clients: Clients = {}
 
   constructor(private name: string, private bindIp: string = '0.0.0.0', private port: number, private onMessage: MessageHandler) {
   }
 
   close(): void {
+    if (this.server == null) {
+      return;
+    }
+
     Object.keys(this.clients).forEach(ip => {
       this.clients[ip].connection.destroy();
       delete this.clients[ip]
