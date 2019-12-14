@@ -1,8 +1,9 @@
-import { AmqpClient, IAmqpClient, Protocol, newProtocolExcange, newProtocolQueue, getProtocolExchange, Queue } from "mototakip-common";
+import { AmqpClient, IAmqpClient, Protocol, newProtocolExcange, newProtocolQueue, getProtocolExchange, Queue, Exchange } from "mototakip-common";
 import Server from './Server'
 import { MessageHandler, Servers } from "./Types";
 import * as path from 'path'
 import { Channel, ConsumeMessage } from "mototakip-common/node_modules/@types/amqplib";
+import logger from './Logger';
 
 class App {
 
@@ -18,7 +19,7 @@ class App {
       this.amqpClient.close();
       this.closeServers();
     }
-
+    
     process.on('SIGINT', closeHandler);
   }
 
@@ -56,7 +57,7 @@ class App {
       return;
     }
 
-    const protocolInExchange = getProtocolExchange(protocol, 'in');
+    const protocolInExchange: Exchange = getProtocolExchange(protocol, 'in');
     if (!protocolInExchange) {
       console.error(`protocol exchange '${protocol.name}:in' not found in registered exhcanges`);
       return;
@@ -64,7 +65,7 @@ class App {
 
     let channel: Channel;
     try {
-      const channel = await this.amqpClient.channel();
+      channel = await this.amqpClient.channel();
       await channel.publish(protocolInExchange.name, protocolInExchange.publisingOptions.routingKey || '', message, {
         headers: {
           ...protocolInExchange.publisingOptions.headers,
@@ -85,9 +86,9 @@ class App {
     let channel: Channel;
 
     const consumer = (message: ConsumeMessage) => {
-      const headers = message.properties.headers;
+      const headers: any = message.properties.headers;
       const server: Server = this.servers[protocol.name]
-      if (headers.ip) {
+      if (headers && headers.ip) {
         server.write(headers.ip, message.content);
         channel.ack(message);
       }
