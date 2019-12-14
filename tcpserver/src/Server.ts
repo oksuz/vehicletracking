@@ -29,8 +29,8 @@ class Server {
     });
 
     this.server.on('connection', (socket: net.Socket) => {
-      socket.on('connect', () => this.onConnect(socket));
-      socket.on('data', (data, socket) => this.onData(data, socket))
+      this.onConnect(socket);
+      socket.on('data', (data) => this.onData(data, socket))
       socket.on('close', (hadError) => { this.onConnectionClose(hadError, socket) });
     });
   }

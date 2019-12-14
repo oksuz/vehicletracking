@@ -1,11 +1,6 @@
 import { Socket } from 'net';
 import Server from './Server';
 
-export interface Protocol {
-  name: string,
-  port: number
-}
-
 export type MessageHandler = (name: string, ip: string, message: Buffer) => void;
 
 export interface Client {

@@ -64,7 +64,7 @@ class AmqpClient implements IAmqpClient {
     let channel: Channel = null;
     try {
       channel = await this.channel();
-      await channel.bindQueue(queue.name, queue.bindTo.name, queue.pattern == null ? '' : queue.pattern);
+      await channel.bindQueue(queue.name, queue.bindTo.name, queue.pattern == null ? '' : queue.pattern, queue.args);
     } finally {
       this.safeCloseChannel(channel);
     }
