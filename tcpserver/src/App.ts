@@ -1,25 +1,30 @@
-import { AmqpClient, IAmqpClient, Protocol, newProtocolExcange, newProtocolQueue, getProtocolExchange, Queue, Exchange } from "mototakip-common";
+import { AmqpClient, IAmqpClient, Protocol, newProtocolQueue, Queue, Exchange, TcpInOutExchanges, tcpExchanges } from "mototakip-common";
 import Server from './Server'
 import { MessageHandler, Servers } from "./Types";
 import * as path from 'path'
 import { Channel, ConsumeMessage } from "mototakip-common/node_modules/@types/amqplib";
 import logger from './Logger';
+import { hostname } from "os";
 
 class App {
 
   private readonly servers: Servers = {};
+  private inOutExchanges: TcpInOutExchanges;
+  static TCP_OUT_QUEUE_NAME = `${hostname()}.tcp.out.q`;
 
   constructor(
     private readonly ServerClass: { new(name: string, bindIp: string, port: number, onMessage: MessageHandler): Server },
     private readonly protocols: Protocol[],
     private readonly amqpClient: IAmqpClient
   ) {
+    this.inOutExchanges = tcpExchanges(hostname())
 
     const closeHandler = () => {
+      logger.debug('sigint recevied closing amqp and servers');
       this.amqpClient.close();
       this.closeServers();
     }
-    
+
     process.on('SIGINT', closeHandler);
   }
 
@@ -34,8 +39,10 @@ class App {
   }
 
   async start(): Promise<void> {
-    await this.createExchanges();
-    await this.createOutQueue();
+    await this.amqpClient.createExchange(this.inOutExchanges.in);
+    await this.amqpClient.createExchange(this.inOutExchanges.out);
+    await this.amqpClient.createQueue({ name: App.TCP_OUT_QUEUE_NAME, bindTo: this.inOutExchanges.out });
+    await this.startConsumingForOut();
     this.createServers();
     this.startServers();
   }
@@ -57,22 +64,11 @@ class App {
       return;
     }
 
-    const protocolInExchange: Exchange = getProtocolExchange(protocol, 'in');
-    if (!protocolInExchange) {
-      console.error(`protocol exchange '${protocol.name}:in' not found in registered exhcanges`);
-      return;
-    }
-
     let channel: Channel;
     try {
       channel = await this.amqpClient.channel();
-      await channel.publish(protocolInExchange.name, protocolInExchange.publisingOptions.routingKey || '', message, {
-        headers: {
-          ...protocolInExchange.publisingOptions.headers,
-          ip
-        }
-      })
-
+      const inExchange: Exchange = this.inOutExchanges.in;
+      await channel.publish(inExchange.name, protocol.name, message, { ...inExchange.publisingOptions, headers: { ip } })
     } catch (e) {
       console.error(`error while publishing message to exchange ${protocol.name}`, e);
     } finally {
@@ -82,33 +78,24 @@ class App {
     }
   }
 
-  private async consumeQueueForProtocol(protocol: Protocol, queue: Queue) {
-    let channel: Channel;
-
+  private async startConsumingForOut() {
     const consumer = (message: ConsumeMessage) => {
       const headers: any = message.properties.headers;
-      const server: Server = this.servers[protocol.name]
-      if (headers && headers.ip) {
-        server.write(headers.ip, message.content);
-        channel.ack(message);
+      let server: Server;
+      
+      if (headers && headers.protocol && headers.ip && (server = this.servers[headers.protocol]) != null) {
+        if (server.write(headers.ip, message.content)) {
+          channel.ack(message);
+        }
       }
-    };
+    }
 
+    let channel: Channel;
     try {
       channel = await this.amqpClient.channel();
-      channel.consume(queue.name, consumer);
+      channel.consume(App.TCP_OUT_QUEUE_NAME, consumer);
     } catch (e) {
-      console.error(`error while consuming ${queue.name}`, e)
-    }
-  }
-
-  private async createOutQueue(): Promise<void> {
-    for (let i = 0, l = this.protocols.length; i < l; i++) {
-      const protocol: Protocol = this.protocols[i];
-      const outExchange = getProtocolExchange(protocol, 'out');
-      const queue = newProtocolQueue(protocol, outExchange, 'out', { headers: { protocol: protocol.name, 'x-match': 'any' } });
-      await this.amqpClient.createQueue(queue);
-      await this.consumeQueueForProtocol(protocol, queue);
+      console.error(`error while consuming ${App.TCP_OUT_QUEUE_NAME}`, e)
     }
   }
 
@@ -117,17 +104,7 @@ class App {
       this.servers[protocol.name] = new this.ServerClass(protocol.name, "0.0.0.0", protocol.port, this.onMessage.bind(this))
     });
   }
-
-  private async createExchanges(): Promise<void> {
-    for (let i = 0, l = this.protocols.length; i < l; i++) {
-      const protocol: Protocol = this.protocols[i];
-      await this.amqpClient.createExchange(newProtocolExcange(protocol, 'headers', 'in'))
-      await this.amqpClient.createExchange(newProtocolExcange(protocol, 'headers', 'out'))
-    }
-  }
 }
-
-
 
 const amqpClient = new AmqpClient('amqp://localhost');
 const protocols: Protocol[] = require(path.resolve('../') + '/protocols.json')

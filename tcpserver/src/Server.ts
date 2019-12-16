@@ -1,5 +1,6 @@
 import * as net from 'net';
 import { MessageHandler, Clients, Client } from './Types'
+import logger from './Logger';
 
 class Server {
 
@@ -54,15 +55,17 @@ class Server {
     console.log(`Socket closed ${socket.remoteAddress} error: ${!!error}`);
   }
 
-  write(ip: string, message: Buffer): void {
+  write(ip: string, message: Buffer): boolean {
     const client: Client = this.clients[ip];
     if (client != null) {
-      client.connection.write(message, (err?: Error) => {
+      return client.connection.write(message, (err?: Error) => {
         if (err != null) {
           console.error(`an error ocurred while writing message to ${this.name}(${ip})`, err);
         }
       });
     }
+
+    return false;
   }
 }
 

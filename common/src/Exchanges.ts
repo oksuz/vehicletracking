@@ -1,31 +1,19 @@
-import { Exchange, Protocol, ExchangeType, Direction } from "./Types";
+import { TcpInOutExchanges } from "./Types";
+import { TCP_SERVER } from './Apps'
 
-const protocolExchanges: Exchange[] = [];
-
-export const getProtocolExchange = (protocol: Protocol, direction: Direction): Exchange => {
-  return protocolExchanges.find((ex: Exchange) => ex.name === `${protocol.name}.exchange.${direction}`)
-};
-
-// pre-defined protcol exchange declaration
-export const newProtocolExcange = (protocol: Protocol, type: ExchangeType, direction: Direction): Exchange => {
-  const exchangeAlreadyDefined: Exchange = getProtocolExchange(protocol, direction);  
-  if (exchangeAlreadyDefined && exchangeAlreadyDefined.type === type) {
-    return exchangeAlreadyDefined;
-  }
-
-  const exchange: Exchange = {
-    name: `${protocol.name}.exchange.${direction}`,
-    type: 'headers',
-    options: {
-      durable: true,
+export const tcpExchanges = (hostname: string): TcpInOutExchanges => {
+  return {
+    in: {
+      name: 'tcp.in',
+      type: 'direct',
+      publisingOptions: {
+        replyTo: `${hostname}.tcp.out`,
+        appId: TCP_SERVER,
+      },
     },
-    publisingOptions: {
-      routingKey: '',
-      headers: {
-        protocol: protocol.name
-      }
+    out: {
+      name: `${hostname}.tcp.out`,
+      type: 'fanout',
     }
   }
-  protocolExchanges.push(exchange);
-  return exchange;
 }

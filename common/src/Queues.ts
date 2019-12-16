@@ -1,9 +1,11 @@
-import { Queue, Protocol, Exchange, Direction } from "./Types";
+import { Queue, Protocol, Exchange } from "./Types";
 
-export const newProtocolQueue = (protocol: Protocol, bindTo: Exchange, direction: Direction, args?: any): Queue => {
+export const newProtocolQueue = (protocol: Protocol, bindTo: Exchange, args?: any): Queue => {
+  const names = [`${protocol.name}.queue`];
+  (args && args.queueSuffix) && names.push(args.queueSuffix)
   return {
-    name: `${protocol.name}.queue.${direction}`,
-    pattern: '',
+    name: names.join('.'),
+    pattern: protocol.name,
     options: {
       durable: true,
     },

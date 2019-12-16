@@ -18,7 +18,7 @@ export namespace ExchangeOptions {
 export interface Exchange extends AmqpEntity {
   type: ExchangeType
   options?: Options.AssertExchange
-  publisingOptions: ExchangeOptions.Publish & Options.Publish
+  publisingOptions?: ExchangeOptions.Publish & Options.Publish
 }
 
 export interface Queue extends AmqpEntity {
@@ -30,4 +30,9 @@ export interface Queue extends AmqpEntity {
 export interface Protocol {
   name: string,
   port: number
+}
+
+export interface TcpInOutExchanges {
+  in: Exchange,
+  out: Exchange
 }
