@@ -1,7 +1,7 @@
 {
-  "name": "tcpserver",
+  "name": "openmts-tcp-server",
   "version": "1.0.0",
-  "description": "Mototakip tcp server",
+  "description": "Openmts tcp server",
   "main": "dist/index.js",
   "scripts": {
     "start:dev": "nodemon --watch src/ --exec 'ts-node' src/index.ts",
@@ -22,6 +22,6 @@
   "dependencies": {
     "amqplib": "^0.5.5",
     "bunyan": "^1.8.12",
-    "mototakip-common": "file:../common"
+    "openmts-common": "file:../common"
   }
 }

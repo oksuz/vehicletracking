@@ -1,8 +1,8 @@
-import { AmqpClient, IAmqpClient, Protocol, newProtocolQueue, Queue, Exchange, TcpInOutExchanges, tcpExchanges } from "mototakip-common";
+import { AmqpClient, IAmqpClient, Protocol, Exchange, TcpInOutExchanges, tcpExchanges } from "openmts-common";
 import Server from './Server'
 import { MessageHandler, Servers } from "./Types";
 import * as path from 'path'
-import { Channel, ConsumeMessage } from "mototakip-common/node_modules/@types/amqplib";
+import { Channel, ConsumeMessage } from "openmts-common/node_modules/@types/amqplib";
 import logger from './Logger';
 import { hostname } from "os";
 
@@ -79,7 +79,8 @@ class App {
   }
 
   private async startConsumingForOut() {
-    const consumer = (message: ConsumeMessage) => {
+
+    const consumer = (channel: Channel) => (message: ConsumeMessage) => {
       const headers: any = message.properties.headers;
       let server: Server;
       
@@ -93,7 +94,7 @@ class App {
     let channel: Channel;
     try {
       channel = await this.amqpClient.channel();
-      channel.consume(App.TCP_OUT_QUEUE_NAME, consumer);
+      channel.consume(App.TCP_OUT_QUEUE_NAME, consumer(channel));
     } catch (e) {
       console.error(`error while consuming ${App.TCP_OUT_QUEUE_NAME}`, e)
     }
