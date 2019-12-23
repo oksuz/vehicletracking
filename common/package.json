@@ -1,5 +1,5 @@
 {
-  "name": "mototakip-common",
+  "name": "openmts-common",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
@@ -11,7 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "amqplib": "^0.5.5"
+    "amqplib": "^0.5.5",
+    "ci": "^1.0.0"
   },
   "devDependencies": {
     "@types/amqplib": "^0.5.13",

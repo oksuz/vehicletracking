@@ -36,3 +36,38 @@ export interface TcpInOutExchanges {
   in: Exchange,
   out: Exchange
 }
+
+
+export interface IndexedList<V> {
+  [key: string]: V
+}
+
+export interface IMessage {
+  protocol: string,
+  serial: string,
+  datetime: Date | null,
+  type: number,
+  attributes: any
+}
+
+export interface LocationMessage extends IMessage {
+  latitue: number,
+  longitude: number,
+  direction: number,
+  speed: number
+}
+
+export interface ReplyHeaders {
+  protocol?: string,
+  ip: string
+}
+
+export interface ParseResult {
+  reply: Buffer,
+  headers: ReplyHeaders
+}
+
+export interface IParser {
+  accept(message: Buffer): boolean
+  parse(message: Buffer, ip: string): Promise<ParseResult & IMessage | IMessage | LocationMessage>
+}
