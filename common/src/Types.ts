@@ -1,5 +1,12 @@
 import { Options } from "amqplib";
 
+export enum MessageType {
+  Login = 'login',
+  Location = 'location',
+  Heartbeat = 'heartbeat',
+  Alert = 'alert'
+}
+
 export type ExchangeType = 'fanout' | 'headers' | 'topic' | 'direct'
 export type Direction = 'in' | 'out';
 
@@ -46,8 +53,8 @@ export interface IMessage {
   protocol: string,
   serial: string,
   datetime: Date | null,
-  type: number,
-  attributes: any
+  type: MessageType,
+  meta: object
 }
 
 export interface LocationMessage extends IMessage {
@@ -57,17 +64,18 @@ export interface LocationMessage extends IMessage {
   speed: number
 }
 
-export interface ReplyHeaders {
-  protocol?: string,
-  ip: string
+export interface MessageReply {
+  message: Buffer,
+  ip: string,
+  protocol: string
 }
 
 export interface ParseResult {
-  reply: Buffer,
-  headers: ReplyHeaders
+  reply?: MessageReply 
+  message: IMessage | LocationMessage
 }
 
 export interface IParser {
   accept(message: Buffer): boolean
-  parse(message: Buffer, ip: string): Promise<ParseResult & IMessage | IMessage | LocationMessage>
+  parse(message: Buffer, ip: string): Promise<ParseResult>
 }

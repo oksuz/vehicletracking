@@ -1,10 +1,10 @@
 import { SessionList, ActiveSession } from "./Types";
 
 class SessionHolder {
-  private activeSessions: SessionList
+  private activeSessions: SessionList = {}
 
   openSessions(ip: string, serial: string): void {
-    if (this.activeSessions[ip]) {
+    if (!this.activeSessions[ip]) {
       this.activeSessions[ip] = {
         ip,
         serial

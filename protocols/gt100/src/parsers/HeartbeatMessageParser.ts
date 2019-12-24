@@ -1,6 +1,7 @@
-import { IParser, ParseResult, IMessage, LocationMessage } from 'openmts-common';
+import { IParser, ParseResult, MessageType } from 'openmts-common';
 import sessionHolder from '../Session';
 import { PROTOCOL_NAME } from '../constants';
+import { hex2String } from '../util/hexUtils';
 
 class HeartbeatMessageParser implements IParser {
   
@@ -11,28 +12,30 @@ class HeartbeatMessageParser implements IParser {
     return header === 0x7878 && type === 0x13 && length === 0x0A;
   }  
   
-  parse(message: Buffer, ip: string): Promise<IMessage | (ParseResult & IMessage) | LocationMessage> {
+  parse(message: Buffer, ip: string): Promise<ParseResult> {
     return new Promise((resolve) => {
       resolve(this._parse(message, ip))
     });
   }
 
-  private _parse(message: Buffer, ip: string): ParseResult & IMessage | LocationMessage {
-    const errorCheck1 = Buffer.from([0xE9]).readInt8(1);
-    const errorCheck2 = Buffer.from([0xF1]).readInt8(1);
-    const reply = Buffer.from([0x78, 0x78, 0x05, 0x13, 0x00, 0x01, errorCheck1, errorCheck2, 0x0D, 0x0A]);
+  private _parse(message: Buffer, ip: string): ParseResult {
+    const reply = Buffer.from([0x78, 0x78, 0x05, 0x13, 0x00, 0x01, Buffer.from([0xE9]).readInt8(0), Buffer.from([0xF1]).readInt8(0), 0x0D, 0x0A]);
 
     return {
-      reply,
-      protocol: PROTOCOL_NAME,
-      serial: sessionHolder.getSerialFromIp(ip),
-      attributes: {},
-      type: 0x13,
-      datetime: null,
-      headers: {
+      reply: {
+        message: reply,
         ip,
         protocol: PROTOCOL_NAME
       },
+      message: {
+        type: MessageType.Heartbeat,
+        datetime: new Date,
+        protocol: PROTOCOL_NAME,
+        serial: sessionHolder.getSerialFromIp(ip),
+        meta: {
+          raw: hex2String(message)
+        }
+      }
     }
   }
 

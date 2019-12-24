@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
-  "scripts": {
-    "start:dev": "nodemon --watch src/ --exec 'ts-node' src/index.ts",
+  "scripts": { 
+    "build:run": "npm run build:tsc && node dist/index.js",
     "build:tsc": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

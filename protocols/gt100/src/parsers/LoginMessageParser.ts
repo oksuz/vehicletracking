@@ -1,8 +1,8 @@
-import { IParser, ParseResult, IMessage, LocationMessage } from 'openmts-common';
+import { IParser, ParseResult, MessageType } from 'openmts-common';
 import sessionHolder from '../Session';
 import { PROTOCOL_NAME } from '../constants';
 
-type ParseResolve = (value: ParseResult & IMessage | LocationMessage) => void;
+type ParseResolve = (value: ParseResult) => void;
 
 class LoginMessageParser implements IParser {
 
@@ -14,7 +14,7 @@ class LoginMessageParser implements IParser {
     return header === 0x7878 && type === 0x01 && length === 0x11;
   }
 
-  parse(message: Buffer, ip: string): Promise<ParseResult & IMessage | LocationMessage>  {
+  parse(message: Buffer, ip: string): Promise<ParseResult>  {
     return new Promise(this._parse(message, ip));
   }
 
@@ -25,17 +25,20 @@ class LoginMessageParser implements IParser {
 
       sessionHolder.openSessions(ip, deviceId);
 
+
       resolve({
-        reply: Buffer.from([0x78, 0x78, 0x05, 0x01, 0x00, 0x01, 0xD9, 0xDC, 0x0D, 0x0A]),
-        protocol: PROTOCOL_NAME,
-        serial: deviceId,
-        attributes: {},
-        type: 0x01,
-        datetime: null,
-        headers: {
+        reply: {
           ip,
-          protocol: PROTOCOL_NAME
+          message: Buffer.from([0x78, 0x78, 0x05, 0x01, 0x00, 0x01, 0xD9, 0xDC, 0x0D, 0x0A]),
+          protocol: PROTOCOL_NAME,
         },
+        message: {
+          protocol: PROTOCOL_NAME,
+          serial: deviceId,
+          datetime: new Date(),
+          type: MessageType.Login,
+          meta: {},
+        }
       })
     }
   }

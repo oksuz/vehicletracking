@@ -41,7 +41,7 @@ class App {
   async start(): Promise<void> {
     await this.amqpClient.createExchange(this.inOutExchanges.in);
     await this.amqpClient.createExchange(this.inOutExchanges.out);
-    await this.amqpClient.createQueue({ name: App.TCP_OUT_QUEUE_NAME, bindTo: this.inOutExchanges.out });
+    await this.amqpClient.createQueue({ name: App.TCP_OUT_QUEUE_NAME, bindTo: this.inOutExchanges.out, options: { messageTtl: 20000 } });
     await this.startConsumingForOut();
     this.createServers();
     this.startServers();

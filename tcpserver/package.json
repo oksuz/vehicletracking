@@ -4,7 +4,7 @@
   "description": "Openmts tcp server",
   "main": "dist/index.js",
   "scripts": {
-    "start:dev": "nodemon --watch src/ --exec 'ts-node' src/index.ts",
+    "start:dev": "nodemon --watch src/ -e ts,json --exec node --inspect-brk -r ts-node/register src/index.ts",
     "build:tsc": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

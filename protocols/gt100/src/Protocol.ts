@@ -1,6 +1,8 @@
 import { IAmqpClient, TcpInOutExchanges, tcpExchanges, IParser, ParseResult } from "openmts-common";
 import { PROTOCOL_NAME } from "./constants";
 import { Channel, ConsumeMessage } from "amqplib";
+import { parse } from "querystring";
+import { hex2String } from "./util/hexUtils";
 class GT100Protocol {
 
   static Q_NAME = "GT100Q"
@@ -17,6 +19,7 @@ class GT100Protocol {
       options: {
         durable: true,
         autoDelete: false,
+        messageTtl: 20000
       },
       bindTo: exhcanges.in
     });
@@ -27,24 +30,26 @@ class GT100Protocol {
   private async startConsume(): Promise<void> {
 
     const consumer = (channel: Channel) => async (message: ConsumeMessage) => {
-      message.content
       try {
         const parser: IParser = this.parsers.find((parser: IParser) => parser.accept(message.content));
 
-        if (parser) {
-          channel.ack(message);
+        if (!parser) { 
+          console.error('unknown message' , hex2String(message.content));
+          return;
         }
 
         const parsedMessage = await parser.parse(message.content, message.properties.headers.ip);
-
+        console.log(parsedMessage);
+        channel.ack(message);
         if ((parsedMessage as ParseResult).reply) {
-          const parseResult = (parsedMessage as ParseResult);
-          channel.publish(message.properties.replyTo, '', parseResult.reply, { headers: parseResult.headers });
+          const { reply: { message: replyMessage, ip, protocol } } = (parsedMessage as ParseResult);
+          
+          channel.publish(message.properties.replyTo, '', replyMessage, {
+            headers: { ip, protocol }
+          });
         }
-
-        
       } catch (e) {
-
+        console.error(e);
       }
     }
 
