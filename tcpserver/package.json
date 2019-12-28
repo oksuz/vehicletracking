@@ -4,8 +4,9 @@
   "description": "Openmts tcp server",
   "main": "dist/index.js",
   "scripts": {
-    "start:dev": "nodemon --watch src/ -e ts,json --exec node --inspect-brk -r ts-node/register src/index.ts",
-    "build:tsc": "tsc",
+    "start:debugger": "nodemon --watch src/ -e ts,json --exec node --inspect-brk -r ts-node/register src/index.ts",
+    "build:tsc": "rm -rf dist && tsc",
+    "build:run": "rm -rf dist && tsc && node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -21,7 +22,6 @@
   },
   "dependencies": {
     "amqplib": "^0.5.5",
-    "bunyan": "^1.8.12",
     "openmts-common": "file:../common"
   }
 }

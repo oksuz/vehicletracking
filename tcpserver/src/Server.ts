@@ -1,11 +1,13 @@
 import * as net from 'net';
 import { MessageHandler, Clients, Client } from './Types'
-import logger from './Logger';
+import { getLogger } from 'openmts-common';
+
 
 class Server {
 
   private server?: net.Server;
   private readonly clients: Clients = {}
+  private readonly logger = getLogger('TcpServer');
 
   constructor(private name: string, private bindIp: string = '0.0.0.0', private port: number, private onMessage: MessageHandler) {
   }
@@ -26,23 +28,25 @@ class Server {
   listen(): void {
     this.server = net.createServer();
     this.server.listen(this.port, this.bindIp, () => {
-      console.log(`server starter for ${this.name} binded to ${this.bindIp}:${this.port}`)
+      this.logger.info("server stared for %s on port %s", this.name, this.port)
     });
 
-    this.server.on('connection', (socket: net.Socket) => {
-      this.onConnect(socket);
-      socket.on('data', (data) => this.onData(data, socket))
-      socket.on('close', (hadError) => { this.onConnectionClose(hadError, socket) });
-    });
+    this.server.on('connection', (socket: net.Socket) => this.onConnect(socket));
   }
 
   onConnect(socket: net.Socket) {
+    socket.on('data', (data) => this.onData(data, socket))
+    socket.on('close', (hadError) => { this.onConnectionClose(hadError, socket) });
+    socket.on('error', (err: Error) => {
+      this.logger.error(err, 'socket error');
+    });
+    
     this.clients[socket.remoteAddress] = {
       connection: socket,
       ip: socket.remoteAddress
     };
 
-    console.log(`new socket connection ${socket.remoteAddress}`);
+    this.logger.info('new socket connection %s', socket.remoteAddress);
   }
 
   onData(data: Buffer, socket: net.Socket): void {
@@ -52,7 +56,7 @@ class Server {
   onConnectionClose(error: boolean, socket: net.Socket): void {
     socket.destroy();
     delete this.clients[socket.remoteAddress];
-    console.log(`Socket closed ${socket.remoteAddress} error: ${!!error}`);
+    this.logger.info(`Socket closed %s, error: %s`, socket.remoteAddress, !!error);
   }
 
   write(ip: string, message: Buffer): boolean {
@@ -60,7 +64,7 @@ class Server {
     if (client != null) {
       return client.connection.write(message, (err?: Error) => {
         if (err != null) {
-          console.error(`an error ocurred while writing message to ${this.name}(${ip})`, err);
+          this.logger.error(err, `an error ocurred while writing message to ${this.name}(${ip})`);
         }
       });
     }
