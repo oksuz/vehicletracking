@@ -62,6 +62,7 @@ class Server {
   write(ip: string, message: Buffer): boolean {
     const client: Client = this.clients[ip];
     if (client != null) {
+      this.logger.debug('writing (%s) value to %s', message, ip);
       return client.connection.write(message, (err?: Error) => {
         if (err != null) {
           this.logger.error(err, `an error ocurred while writing message to ${this.name}(${ip})`);
