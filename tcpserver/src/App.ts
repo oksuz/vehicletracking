@@ -3,7 +3,6 @@ import { MessageHandler, Servers } from "./Types";
 import { Channel, ConsumeMessage } from "openmts-common/node_modules/@types/amqplib";
 import Server from './Server'
 import * as path from 'path'
-import { hostname } from "os";
 
 
 class App {
@@ -13,7 +12,7 @@ class App {
   private closeOutChannel?: Function;
 
   private readonly outQueue: Queue = {
-    name: `${hostname()}.tcp.out.q`,
+    name: 'tcp.out',
     options: {
       durable: true,
       autoDelete: false,
@@ -76,10 +75,10 @@ class App {
           ip
         },
         pattern: protocolName,
-        replyTo: this.outQueue.name
+        replyTo: TCP_OUT.name
       });
     } catch (e) {
-      this.logger.error(e, 'error on publishing message to %s protocol: %s, ip: %s', TCP_IN.name, protocolName, ip);
+      this.logger.error('error on publishing message to %s protocol: %s, ip: %s', TCP_IN.name, protocolName, ip);
     }
   }
 

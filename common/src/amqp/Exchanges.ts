@@ -1,4 +1,5 @@
 import { Exchange } from "./Types";
+import { hostname } from "os";
 
 export const TCP_IN: Exchange = {
   name: 'tcp.in',
@@ -21,7 +22,7 @@ export const NEW_MESSAGE: Exchange = {
 }
 
 export const TCP_OUT: Exchange = {
-  name: 'tcp.out',
+  name: `tcp.out.${hostname()}`,
   type: 'fanout',
   options: {
     durable: true,
