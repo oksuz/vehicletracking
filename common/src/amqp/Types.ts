@@ -8,7 +8,7 @@ export interface PublishOptions extends Options.Publish {
 
 export interface BindingOptions {
   bindTo: string,
-  pattern?: '',
+  pattern?: string,
   args?: object
 }
 
@@ -27,5 +27,8 @@ export interface Queue {
 
 export interface Reply {
   body: Buffer | string
-  headers?: object
+  headers?: object,
+  reply?: ReplyFn
 }
+
+export type ReplyFn = (reply: Reply) => void

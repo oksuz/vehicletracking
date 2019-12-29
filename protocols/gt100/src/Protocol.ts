@@ -1,64 +1,58 @@
-import { IAmqpClient, TcpInOutExchanges, tcpExchanges, IParser, ParseResult } from "openmts-common";
+import { IParser, ParseResult, AmqpClient, Queue, TCP_IN, getLogger, NEW_MESSAGE, amqpDisconnect } from "openmts-common";
 import { PROTOCOL_NAME } from "./constants";
 import { Channel, ConsumeMessage } from "amqplib";
-import { parse } from "querystring";
 import { hex2String } from "./util/hexUtils";
+
 class GT100Protocol {
 
-  static Q_NAME = "GT100Q"
+  static Q_NAME = "gt100.incoming.messages"
   static DIRECT_MESSAGE_PATTERN = PROTOCOL_NAME;
 
-  constructor(private readonly amqp: IAmqpClient, private readonly parsers: IParser[]) {
+  static gt100IncomingMessageQ: Queue = {
+    name: GT100Protocol.Q_NAME,
+    options: {
+      durable: false,
+      autoDelete: true,
+      messageTtl: 30 * 1000,
+    },
+    bindingOptions: {
+      bindTo: TCP_IN.name,
+      pattern: PROTOCOL_NAME,
+    }
+  }
+
+  private logger = getLogger('Gt100Protocol')
+
+  constructor(private readonly amqp: AmqpClient, private readonly parsers: IParser[]) {
   }
 
   async start(): Promise<void> {
-    const exhcanges: TcpInOutExchanges = tcpExchanges('');
-    await this.amqp.createQueue({
-      name: GT100Protocol.Q_NAME,
-      pattern: GT100Protocol.DIRECT_MESSAGE_PATTERN,
-      options: {
-        durable: true,
-        autoDelete: false,
-        messageTtl: 20000
-      },
-      bindTo: exhcanges.in
-    });
+    const channelClose: Function = await this.amqp.consume(GT100Protocol.gt100IncomingMessageQ, this.consumer.bind(this));
 
-    await this.startConsume();
+    process.on('SIGINT', () => {
+      amqpDisconnect(this.amqp, [channelClose]);
+    });
   }
 
-  private async startConsume(): Promise<void> {
-
-    const consumer = (channel: Channel) => async (message: ConsumeMessage) => {
-      try {
-        const parser: IParser = this.parsers.find((parser: IParser) => parser.accept(message.content));
-
-        if (!parser) { 
-          console.error('unknown message' , hex2String(message.content));
-          return;
-        }
-
-        const parsedMessage = await parser.parse(message.content, message.properties.headers.ip);
-        console.log(parsedMessage);
-        channel.ack(message);
-        if ((parsedMessage as ParseResult).reply) {
-          const { reply: { message: replyMessage, ip, protocol } } = (parsedMessage as ParseResult);
-          
-          channel.publish(message.properties.replyTo, '', replyMessage, {
-            headers: { ip, protocol }
-          });
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    let ch: Channel
+  private async consumer(message: ConsumeMessage, channel: Channel): Promise<void> {
     try {
-      ch = await this.amqp.channel();
-      ch.consume(GT100Protocol.Q_NAME, (consumer(ch)));
+      const parser: IParser = this.parsers.find((parser: IParser) => parser.accept(message.content));
+      channel.ack(message); 
+      
+      if (!parser) {
+        this.logger.info('unknown message %s', hex2String(message.content));
+        return;
+      }
+
+      const parsedMessage = await parser.parse(message.content, message.properties.headers.ip);
+      if ((parsedMessage as ParseResult).reply) {
+        const { reply: { message: replyMessage, ip, protocol } } = (parsedMessage as ParseResult);
+        this.logger.debug('replying message (%s) with %s', hex2String(message.content), hex2String(replyMessage));
+        await this.amqp.publish(message.properties.replyTo, replyMessage, { headers: { ip, protocol } } );
+      }
+      await this.amqp.publish(NEW_MESSAGE, Buffer.from(JSON.stringify(parsedMessage.message)), {})
     } catch (e) {
-      console.error('channel consume error');
+      this.logger.error('error when handling message', e);
     }
   }
 

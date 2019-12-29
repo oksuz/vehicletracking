@@ -1,4 +1,4 @@
-import { AmqpClient, Protocol, getLogger, TCP_IN, TCP_OUT, Queue, TCP_SERVER } from "openmts-common";
+import { AmqpClient, Protocol, getLogger, TCP_IN, TCP_OUT, Queue, TCP_SERVER, NEW_MESSAGE, amqpDisconnect } from "openmts-common";
 import { MessageHandler, Servers } from "./Types";
 import { Channel, ConsumeMessage } from "openmts-common/node_modules/@types/amqplib";
 import Server from './Server'
@@ -29,26 +29,13 @@ class App {
     private readonly protocols: Protocol[],
     private readonly amqpClient: AmqpClient
   ) {
-  
-    const closeHandler = () => {
+
+    process.on('SIGINT', () => {
       this.logger.debug('sigint recevied closing amqp and servers');
-      try {
-        if (this.closeOutChannel) {
-          this.closeOutChannel();
-        }
-      } catch (e) {}
-
-      try {
-        this.amqpClient.close();
-      } catch (e) {}
-      
-      try {
-        this.closeServers();
-      } catch (e) {}
-      
-    }
-
-    process.on('SIGINT', closeHandler);
+      const closers = [this.closeOutChannel ? this.closeOutChannel : () => null];
+      amqpDisconnect(this.amqpClient, closers)
+      this.closeServers();
+    });
   }
 
   private closeServers() {
@@ -58,7 +45,7 @@ class App {
   }
 
   async start(): Promise<void> {
-    await this.amqpClient.newExchange([TCP_IN, TCP_OUT]);
+    await this.amqpClient.newExchange([TCP_IN, TCP_OUT, NEW_MESSAGE]);
     await this.startConsumingForOut();
     this.createServers();
     this.startServers();

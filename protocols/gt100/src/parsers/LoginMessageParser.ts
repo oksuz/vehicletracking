@@ -25,7 +25,6 @@ class LoginMessageParser implements IParser {
 
       sessionHolder.openSessions(ip, deviceId);
 
-
       resolve({
         reply: {
           ip,

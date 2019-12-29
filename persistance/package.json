@@ -1,25 +1,23 @@
 {
-  "name": "openmts-common",
+  "name": "persistance",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
+  "main": "index.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
+    "run:prod": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "amqplib": "^0.5.5",
-    "bunyan": "^1.8.12",
-    "ci": "^1.0.0",
-    "uuid": "^3.3.3"
+    "mongodb": "^3.4.1",
+    "openmts-common": "file:../common"
   },
   "devDependencies": {
     "@types/amqplib": "^0.5.13",
-    "@types/node": "^12.12.22",
-    "tslint": "^5.20.1",
-    "typescript": "^3.7.3"
+    "@types/mongodb": "^3.3.14",
+    "typescript": "^3.7.4"
   }
 }

@@ -65,9 +65,11 @@ class AmqpClient {
     });
   }
 
-  private static safeClose(ch: Channel) {
+  private static async safeClose(ch: Channel) {
     if (ch != null) {
-      ch.close();
+      try {
+        await ch.close();
+      } catch (e) {}
     }
   }
 
@@ -78,8 +80,8 @@ class AmqpClient {
       const name = AmqpClient.getNameFromType(queue);
       await this.newQueue(queue as Queue);
       await channel.consume(name, message => handler(message, channel));
-      return () => {
-        AmqpClient.safeClose(channel);
+      return async () => {
+        await AmqpClient.safeClose(channel);
       }
     } catch (e) {
       AmqpClient.safeClose(channel);
@@ -133,3 +135,16 @@ class AmqpClient {
 }
 
 export default AmqpClient;
+
+export function amqpDisconnect(client: AmqpClient, channelClosers: Function[]) {
+  new Promise(async (resolve) => {
+    try {
+      for (let i = 0, l = channelClosers.length; i < l; i++) {
+        await channelClosers[i]();
+      }
+    } catch(e) {}
+    resolve();
+  }).then(() => {
+    client.close();
+  });
+}

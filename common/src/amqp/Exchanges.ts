@@ -16,7 +16,7 @@ export const NEW_MESSAGE: Exchange = {
   options: {
     durable: true,
     autoDelete: false,
-    internal: true
+    internal: false
   }
 }
 

@@ -4,8 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": { 
+    "build": "rm -rf dist && tsc",
+    "run:prod": "node dist/index.js",
     "build:run": "npm run build:tsc && node dist/index.js",
-    "build:tsc": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

@@ -4,9 +4,9 @@
   "description": "Openmts tcp server",
   "main": "dist/index.js",
   "scripts": {
+    "build": "rm -rf dist && tsc",
+    "run:prod": "node dist/index.js",
     "start:debugger": "nodemon --watch src/ -e ts,json --exec node --inspect-brk -r ts-node/register src/index.ts",
-    "build:tsc": "rm -rf dist && tsc",
-    "build:run": "rm -rf dist && tsc && node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

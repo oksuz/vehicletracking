@@ -1,6 +1,6 @@
-import AmqpClient from './AmqpClient';
+import AmqpClient, { amqpDisconnect } from './AmqpClient';
 import uuid from 'uuid/v1';
-import { Exchange, Queue, Reply } from './Types';
+import { Exchange, Queue, Reply, ReplyFn } from './Types';
 import { REQUEST_EXCHANGE, RESPONSE_EXCHANGE } from './Exchanges';
 import { getLogger } from "../LoggerFactory";
 import { ConsumeMessage, Channel } from 'amqplib';
@@ -34,8 +34,7 @@ class DataChannel {
 
     process.on('SIGINT', async () => {
       this.logger.debug('closing datachannel on %s', hostname());
-      this.channelClosers.map((c: Function) => c());
-      this.amqpClient.close();
+      amqpDisconnect(this.amqpClient, this.channelClosers);
     })
   }
 
@@ -98,13 +97,20 @@ class DataChannel {
     await this.amqpClient.publish(RESPONSE_EXCHANGE, payload, { headers, correlationId: requestId });
   }
 
+  private createReplyFn(requestId: string): ReplyFn {
+    return (reply: Reply) => {
+      const body = typeof reply.body === 'string' ? Buffer.from(reply.body as string) : reply.body
+      this.response(requestId, body, reply.headers);
+    }
+  }
+
   async request(payload: Buffer, headers?: object, timeout: number = 30): Promise<Reply> {
     const requestId = uuid();
     await this.amqpClient.publish(REQUEST_EXCHANGE, payload, { headers, correlationId: requestId });
 
     return new Promise((resolve, reject) => {
       let rejected = false;
-      const timer = setTimeout(() => reject(), timeout * 1000);
+      const timer = setTimeout(() => reject('timeout'), timeout * 1000);
       this.handlers[requestId] = (message: ConsumeMessage) => {
         if (rejected) {
           return;
@@ -112,7 +118,8 @@ class DataChannel {
         clearTimeout(timer);
         resolve({
           body: message.content,
-          headers: message.properties && (message.properties.headers || {})
+          headers: message.properties && (message.properties.headers || {}),
+          reply: this.createReplyFn(requestId)
         });
       };
     });
