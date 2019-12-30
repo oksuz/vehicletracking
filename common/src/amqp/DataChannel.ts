@@ -110,7 +110,10 @@ class DataChannel {
 
     return new Promise((resolve, reject) => {
       let rejected = false;
-      const timer = setTimeout(() => reject('timeout'), timeout * 1000);
+      const timer = setTimeout(() => {
+        reject('timeout');
+        rejected = true;
+      }, timeout * 1000);
       this.handlers[requestId] = (message: ConsumeMessage) => {
         if (rejected) {
           return;
