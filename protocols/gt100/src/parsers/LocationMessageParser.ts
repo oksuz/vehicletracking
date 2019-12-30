@@ -34,10 +34,10 @@ class LocationParser implements IParser {
     return {
       message: {
         datetime: new Date(`${2000 + year}-${month}-${day} ${hour}:${minute}:${second}`),
-        latitue: latInfo.readInt32BE(0) / 30000.0 / 60.0,
+        latitude: latInfo.readInt32BE(0) / 30000.0 / 60.0,
         longitude: lngInfo.readInt32BE(0) / 30000.0 / 60.0,
         direction,
-        speed: message.readInt8(19),
+        speed: message.readUInt8(19),
         meta: {
           acc: message.readInt8(30),
           dataUploadMode: dataUploadModeFromCode(message.readInt8(31))

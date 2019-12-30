@@ -23,7 +23,7 @@ export interface IMessage {
 }
 
 export interface LocationMessage extends IMessage {
-  latitue: number,
+  latitude: number,
   longitude: number,
   direction: number,
   speed: number
