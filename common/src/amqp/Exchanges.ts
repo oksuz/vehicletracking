@@ -33,7 +33,7 @@ export const TCP_OUT: Exchange = {
 
 export const REQUEST_EXCHANGE: Exchange = {
   type: 'fanout', 
-  name: 'request',
+  name: 'messagebus.request',
   options: {
     durable: true,
     autoDelete: false,
@@ -42,7 +42,7 @@ export const REQUEST_EXCHANGE: Exchange = {
 
 export const RESPONSE_EXCHANGE: Exchange = {
   type: 'fanout', 
-  name: 'reply',
+  name: 'messagebus.reply',
   options: {
     durable: true,
     autoDelete: false,

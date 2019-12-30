@@ -10,12 +10,12 @@ export interface ResponseHandler {
   [key: string]: (message: ConsumeMessage) => void
 }
 
-class DataChannel {
+class MessageBus {
 
-  private readonly logger = getLogger('DataChannel');
+  private readonly logger = getLogger('MessageBus');
   
   private readonly responseQueue: Queue = {
-    name: 'dataChannel.response',
+    name: 'messagebus.response',
     options: {
       autoDelete: false,
       durable: true,
@@ -36,7 +36,7 @@ class DataChannel {
     this.init(exchanges);
 
     process.on('SIGINT', async () => {
-      this.logger.debug('closing datachannel on %s', hostname());
+      this.logger.debug('closing messagebus on %s', hostname());
       amqpDisconnect(this.amqpClient, this.channelClosers);
     })
   }
@@ -68,10 +68,14 @@ class DataChannel {
 
   async registerDataProvider(serviceName: string, handler: (message: ConsumeMessage) => void): Promise<void> {
     const q = this.newDataProviderQueue(serviceName);
-    await this.amqpClient.newQueue(q)
-    const closeChannel = await this.amqpClient.consume(q.name, (message: ConsumeMessage, channel: Channel) => {
-      channel.ack(message);
-      handler(message);
+    const closeChannel = await this.amqpClient.consume(q, (message: ConsumeMessage, channel: Channel) => {
+      try {
+        handler(message);
+        channel.ack(message);
+      } catch (e) {
+        this.logger.error('%s handler error', serviceName, e);
+      }
+      
     });
 
     this.channelClosers.push(closeChannel);
@@ -117,6 +121,7 @@ class DataChannel {
         reject('timeout');
         rejected = true;
       }, timeout * 1000);
+
       this.handlers[requestId] = (message: ConsumeMessage) => {
         if (rejected) {
           return;
@@ -133,4 +138,4 @@ class DataChannel {
 }
 
 
-export default new DataChannel(new AmqpClient(), [REQUEST_EXCHANGE, RESPONSE_EXCHANGE]);
+export default new MessageBus(new AmqpClient(), [REQUEST_EXCHANGE, RESPONSE_EXCHANGE]);
