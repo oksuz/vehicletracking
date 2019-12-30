@@ -43,7 +43,7 @@ class DbConnection {
       const connection = await this.getConnection();
       const db: Db = connection.db(message.protocol);
       const collection = db.collection(message.type);
-      await collection.insertOne(message);
+      await collection.insertOne({ ...message, datetime: new Date(message.datetime) });
     } catch (e) {
       this.logger.error('message save error', e)
     }
