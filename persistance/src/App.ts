@@ -11,7 +11,10 @@ class App {
     options: {
       durable: true,
       autoDelete: false,
-      messageTtl: 30 * 1000
+      messageTtl: 30 * 1000,
+      arguments: {
+        'x-single-active-consumer': true
+      }
     },
     bindingOptions: {
       bindTo: NEW_MESSAGE.name,

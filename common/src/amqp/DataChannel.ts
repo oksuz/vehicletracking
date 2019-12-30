@@ -20,6 +20,9 @@ class DataChannel {
       autoDelete: false,
       durable: true,
       messageTtl: 30 * 1000,
+      arguments: {
+        'x-single-active-consumer': true
+      }
     },
     bindingOptions: {
       bindTo: RESPONSE_EXCHANGE.name

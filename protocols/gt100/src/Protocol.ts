@@ -14,6 +14,9 @@ class GT100Protocol {
       durable: false,
       autoDelete: true,
       messageTtl: 30 * 1000,
+      arguments: {
+        'x-single-active-consumer': true
+      }
     },
     bindingOptions: {
       bindTo: TCP_IN.name,

@@ -3,6 +3,7 @@ import { MessageHandler, Servers } from "./Types";
 import { Channel, ConsumeMessage } from "openmts-common/node_modules/@types/amqplib";
 import Server from './Server'
 import * as path from 'path'
+import { hostname } from "os";
 
 
 class App {
@@ -12,11 +13,14 @@ class App {
   private closeOutChannel?: Function;
 
   private readonly outQueue: Queue = {
-    name: 'tcp.out',
+    name: `${hostname()}.tcp.out`,
     options: {
       durable: true,
       autoDelete: false,
       messageTtl: 30 * 1000,
+      arguments: {
+        'x-single-active-consumer': true
+      }
     },
     bindingOptions: {
       bindTo: TCP_OUT.name
