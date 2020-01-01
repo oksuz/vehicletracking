@@ -1,7 +1,10 @@
-import { IParser, ParseResult, AmqpClient, Queue, TCP_IN, getLogger, NEW_MESSAGE, amqpDisconnect } from "openmts-common";
+import { IParser, ParseResult, AmqpClient, Queue, TCP_IN, getLogger, NEW_MESSAGE, amqpDisconnect, IMessage } from "openmts-common";
 import { PROTOCOL_NAME } from "./constants";
 import { Channel, ConsumeMessage } from "amqplib";
 import { hex2String } from "./util/hexUtils";
+
+export type MessageParser = IParser<IMessage>;
+export type MessageParseResult = ParseResult<IMessage>;
 
 class GT100Protocol {
 
@@ -26,7 +29,7 @@ class GT100Protocol {
 
   private logger = getLogger('Gt100Protocol')
 
-  constructor(private readonly amqp: AmqpClient, private readonly parsers: IParser[]) {
+  constructor(private readonly amqp: AmqpClient, private readonly parsers: MessageParser[]) {
   }
 
   async start(): Promise<void> {
@@ -39,7 +42,7 @@ class GT100Protocol {
 
   private async consumer(message: ConsumeMessage, channel: Channel): Promise<void> {
     try {
-      const parser: IParser = this.parsers.find((parser: IParser) => parser.accept(message.content));
+      const parser: MessageParser = this.parsers.find((parser: MessageParser) => parser.accept(message.content));
       channel.ack(message); 
       
       if (!parser) {
@@ -48,8 +51,9 @@ class GT100Protocol {
       }
 
       const parsedMessage = await parser.parse(message.content, message.properties.headers.ip);
-      if ((parsedMessage as ParseResult).reply) {
-        const { reply: { message: replyMessage, ip, protocol } } = (parsedMessage as ParseResult);
+      const parsedMessageWType = (parsedMessage as MessageParseResult);
+      if (parsedMessageWType.reply) {
+        const { reply: { message: replyMessage, ip, protocol } } = parsedMessageWType;
         this.logger.debug('replying message (%s) with %s', hex2String(message.content), hex2String(replyMessage));
         await this.amqp.publish(message.properties.replyTo, replyMessage, { headers: { ip, protocol } } );
       }

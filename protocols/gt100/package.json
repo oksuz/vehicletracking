@@ -1,9 +1,9 @@
 {
   "name": "openmts-gt100-protocol",
   "version": "1.0.0",
-  "description": "",
+  "description": "this protocol handles jimilab/concox JM01, JV200, GT300, GT800, MT200, OB22, X3, Q2, Wetrack lite,  ET25, GT08, HVT001, ET500, U20, messages",
   "main": "dist/index.js",
-  "scripts": { 
+  "scripts": {
     "build": "rm -rf dist && tsc",
     "run:prod": "node dist/index.js",
     "build:run": "npm run build:tsc && node dist/index.js",

@@ -1,10 +1,12 @@
-import { IParser, ParseResult, MessageType } from 'openmts-common';
+import { IParser, ParseResult, MessageType, IMessage } from 'openmts-common';
 import sessionHolder from '../Session';
 import { PROTOCOL_NAME } from '../constants';
 
-type ParseResolve = (value: ParseResult) => void;
+type ParseResolve = (value: ParseResult<LoginMessage>) => void;
 
-class LoginMessageParser implements IParser {
+export interface LoginMessage extends IMessage {}
+
+class LoginMessageParser implements IParser<LoginMessage> {
 
   accept(message: Buffer): boolean {
 
@@ -14,7 +16,7 @@ class LoginMessageParser implements IParser {
     return header === 0x7878 && type === 0x01 && length === 0x11;
   }
 
-  parse(message: Buffer, ip: string): Promise<ParseResult>  {
+  parse(message: Buffer, ip: string): Promise<ParseResult<LoginMessage>>  {
     return new Promise(this._parse(message, ip));
   }
 
