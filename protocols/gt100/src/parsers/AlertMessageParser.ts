@@ -46,7 +46,7 @@ class AlertMessageParser implements IParser<AlertMessage> {
 
     const alert = message.readInt8(34);
     const voltageLevel = message.readInt8(32);
-    const gsmSignalStregnt = message.readInt8(33);
+    const gsmSignalStrength = message.readInt8(33);
 
     return {
       message: {
@@ -58,7 +58,7 @@ class AlertMessageParser implements IParser<AlertMessage> {
         meta: {
           raw: hex2String(message),
           voltageLevel: voltageLevelFromCode(voltageLevel),
-          gsmSignalStregnt: gsmSignalStrengthFromCode(gsmSignalStregnt)
+          gsmSignalStregnt: gsmSignalStrengthFromCode(gsmSignalStrength)
         },
         gsmLocation: {
           mobileCountryCode: mcc,
