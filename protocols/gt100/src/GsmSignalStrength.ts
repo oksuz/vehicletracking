@@ -12,7 +12,7 @@ export function gsmSignalStrengthFromCode(code: number): GsmSignalStrength {
     case 0x01: return GsmSignalStrength.EXTEMELY_WEAK_SIGNAL;
     case 0x02: return GsmSignalStrength.WEAK_SIGNAL;
     case 0x03: return GsmSignalStrength.GOOD_SIGNAL;
-    case 0x03: return GsmSignalStrength.STRONG_SIGNAL;
+    case 0x04: return GsmSignalStrength.STRONG_SIGNAL;
     default: return null;
   }
 }
