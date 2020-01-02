@@ -13,7 +13,7 @@ class AlertMessageParser implements IParser<AlertMessage> {
     const header: number = message.readInt16BE(0);
     const length: number = message.readInt8(2)
     const type: number = message.readInt8(3)
-    return header === 0x7878 && type === 0x26 && length === 0x0A;
+    return header === 0x7878 && type === 0x26 && length === 0x25;
   }
 
   parse(message: Buffer, ip: string): Promise<ParseResult<AlertMessage>> {
